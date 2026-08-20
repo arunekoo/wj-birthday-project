@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>wj's birthday project — happy</title>
+  <style>
+    :root{
+      --base: #6194b8;
+      --stripe: #90b8d4;
+      --bubble-bg: rgba(255,255,255,0.75); /* 75% opacity white bubble */
+      --confetti-color: rgba(255,255,255,0.5); /* confetti at 50% opacity */
+      --max-width:900px;
+    }
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background: repeating-linear-gradient(90deg,var(--base) 0 56px,var(--stripe) 56px 112px);-webkit-font-smoothing:antialiased;}
+    /* Confetti canvas covers background but does not intercept pointer events */
+    #confetti {
+      position:fixed;
+      inset:0;
+      width:100%;
+      height:100%;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:28px;
+      position:relative;
+      z-index:1; /* sit above confetti */
+    }
+
+    /* White text bubble */
+    .bubble {
+      background: var(--bubble-bg);
+      color: var(--base);
+      padding: 28px 34px;
+      border-radius: 20px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+      max-width: var(--max-width);
+      width: 92%;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    .bubble p {
+      margin: 0;
+      font-weight: 700; /* bold */
+      font-size: 18px;
+      line-height: 1.45;
+      color: var(--base);
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    /* Heart under paragraph */
+    .heart-row{
+      margin-top:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .heart {
+      width:48px;
+      height:44px;
+      display:inline-block;
+      flex:0 0 auto;
+    }
+
+    .next-row{
+      margin-top:20px;
+      display:flex;
+      justify-content:center;
+    }
+    .next-btn{
+      display:inline-block;
+      padding:12px 22px;
+      border-radius:999px;
+      background:#fff;
+      color:var(--base);
+      font-weight:700;
+      text-decoration:none;
+      box-shadow:0 10px 26px rgba(0,0,0,0.16);
+      cursor:pointer;
+      border:none;
+    }
+
+    .hint {
+      margin-top:12px;
+      color: rgba(255,255,255,0.95);
+      font-size:13px;
+      text-align:center;
+      opacity:0.95;
+      display:none;
+    }
+
+    @media (max-width:720px){
+      .bubble p{font-size:16px}
+      .bubble{padding:22px}
+      .heart{ width:40px; height:36px; }
+    }
+    @media (max-width:420px){
+      .bubble p{font-size:15px; line-height:1.4}
+      .bubble{padding:18px}
+    }
+  </style>
+</head>
+<body>
+  <canvas id="confetti" aria-hidden="true"></canvas>
+
+  <div class="wrap" role="main">
+    <div>
+      <div class="bubble" role="region" aria-label="Birthday message">
+        <p id="msg">
+Happy birthday wj, you've been such a good friend to me i can't even begin to explain how much i care about you as well as how proud i am of you for coming so far as your 18th birthday despite struggling, you are single handedly one of the kindest, most caring amazing friend i've had the pleasure of meeting, and admittedly you're sometimes funny... you deserve everything and much more even if you don't believe that, i'll believe it for you until you believe it yourself, happy 18th birthday to you silly *.☆⸜(⑉˙ᗜ˙⑉)⸝♡.*
+        </p>
+
+        <div class="heart-row" aria-hidden="false" aria-label="heart decoration">
+          <!-- small heart filled with the page base color (visible on the white bubble) -->
+          <svg class="heart" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="false" focusable="false">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 4 4 6.5 4c1.74 0 3.41.81 4.5 2.09C12.09 4.81 13.76 4 15.5 4 18 4 20 6 20 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="var(--base)"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="next-row">
+        <button id="nextBtn" class="next-btn">next page for a lil suprise</button>
+      </div>
+
+      <div class="hint" id="hint">Tap anywhere to start the music</div>
+    </div>
+  </div>
+
+  <script>
+    // AUDIO: audio-only playback (no visible controls).
+    // Provide an MP3 named 'jealous.mp3' in the same folder, or change audioSrc to your URL.
+    (function(){
+      const audioSrc = 'jealous.mp3'; // <-- replace with a hosted mp3 URL if you prefer
+      const audio = new Audio(audioSrc);
+      audio.preload = 'auto';
+      audio.loop = false;
+      audio.crossOrigin = 'anonymous';
+
+      const hintEl = document.getElementById('hint');
+
+      function showHint() { if(hintEl) hintEl.style.display = 'block'; }
+      function hideHint() { if(hintEl) hintEl.style.display = 'none'; }
+
+      function tryPlay() {
+        audio.play().then(() => {
+          hideHint();
+        }).catch((err) => {
+          // Autoplay blocked: show hint and start on first user interaction
+          console.warn('Autoplay blocked or failed:', err);
+          showHint();
+          const startOnUserGesture = () => {
+            audio.play().catch(e => console.warn('Play failed after gesture:', e));
+            document.removeEventListener('click', startOnUserGesture);
+            document.removeEventListener('touchstart', startOnUserGesture);
+            hideHint();
+          };
+          document.addEventListener('click', startOnUserGesture, {once:true});
+          document.addEventListener('touchstart', startOnUserGesture, {once:true});
+        });
+      }
+
+      try {
+        const clicked = sessionStorage.getItem('clickedYes');
+        if(clicked === '1'){
+          sessionStorage.removeItem('clickedYes');
+          tryPlay();
+        } else {
+          // also attempt autoplay if user landed directly
+          tryPlay();
+        }
+      } catch(e){
+        tryPlay();
+      }
+
+      // Stop audio on pagehide
+      window.addEventListener('pagehide', ()=> { try { audio.pause(); audio.currentTime = 0; } catch(e){} });
+
+      // Next page navigation
+      document.getElementById('nextBtn').addEventListener('click', function(){
+        window.location.href = 'surprise.html';
+      });
+    })();
+
+    // CONFETTI: animated falling pieces (white at 50% opacity)
+    (function(){
+      const canvas = document.getElementById('confetti');
+      if(!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let w = canvas.width = innerWidth;
+      let h = canvas.height = innerHeight;
+
+      // Particle settings
+      const density = 0.00012; // particles per pixel (adjust density)
+      let particleCount = Math.ceil(w * h * density);
+      const particles = [];
+
+      function rand(min, max){ return min + Math.random() * (max - min); }
+
+      function createParticle(i){
+        return {
+          x: Math.random() * w,
+          y: Math.random() * h * Math.random(), // start distributed more at top
+          size: rand(2, 8),
+          speedY: rand(20, 120) / 60, // vertical speed (px per frame approx)
+          drift: rand(-0.6, 0.6), // horizontal drift
+          rot: rand(0, Math.PI*2),
+          rotSpeed: rand(-0.04, 0.04),
+          opacity: 0.5 // 50% opacity as requested
+        };
+      }
+
+      function initParticles(){
+        particles.length = 0;
+        particleCount = Math.ceil(w * h * density);
+        for(let i=0;i<particleCount;i++){
+          particles.push(createParticle(i));
+        }
+      }
+
+      function resize(){
+        w = canvas.width = innerWidth;
+        h = canvas.height = innerHeight;
+        initParticles();
+      }
+      addEventListener('resize', resize);
+
+      // Draw a single frame
+      function draw(){
+        ctx.clearRect(0,0,w,h);
+        ctx.fillStyle = 'rgba(255,255,255,1)'; // white, per-particle alpha used
+        for(let i=0;i<particles.length;i++){
+          const p = particles[i];
+          ctx.save();
+          ctx.globalAlpha = p.opacity;
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          // draw small rounded rectangle / confetti piece
+          ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size*0.6);
+          ctx.restore();
+
+          // update
+          p.x += p.drift + Math.sin(p.y * 0.01) * 0.2;
+          p.y += p.speedY;
+          p.rot += p.rotSpeed;
+
+          // recycle when off bottom or sides
+          if(p.y - p.size > h){
+            p.y = -10;
+            p.x = Math.random() * w;
+            p.speedY = rand(20,120) / 60;
+            p.drift = rand(-0.6,0.6);
+            p.size = rand(2,8);
+          }
+          if(p.x < -50) p.x = w + 50;
+          if(p.x > w + 50) p.x = -50;
+        }
+        requestAnimationFrame(draw);
+      }
+
+      // Start
+      resize();
+      requestAnimationFrame(draw);
+    })();
+  </script>
+</body>
+</html>

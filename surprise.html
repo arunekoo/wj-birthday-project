@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>wj's birthday project — surprise</title>
+  <style>
+    :root{ --base:#6194b8; --stripe:#90b8d4; --white:#ffffff; }
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+    body{
+      background: repeating-linear-gradient(90deg, var(--base) 0 56px, var(--stripe) 56px 112px);
+      display:flex; align-items:center; justify-content:center; color:var(--white);
+    }
+    .box{ background:var(--white); padding:28px 34px; border-radius:12px; min-width:320px; max-width:680px; text-align:center; box-shadow:0 12px 36px rgba(0,0,0,0.18); }
+    .label{ font-size:14px; color:#444; margin-bottom:10px; }
+    .timer{ font-size:28px; font-weight:700; color:#222; letter-spacing:1px; }
+    .small{ margin-top:12px; font-size:13px; color:#555; }
+    .heart-row{ margin-top:16px; display:flex; align-items:center; justify-content:center; gap:8px; }
+    .heart { width:40px; height:36px; display:inline-block; flex:0 0 auto; }
+    @media (max-width:480px){ .timer{font-size:22px} .heart { width:34px; height:30px; } }
+  </style>
+</head>
+<body>
+  <div class="box" role="region" aria-label="12 hour countdown">
+    <div class="label">Time remaining</div>
+    <div class="timer" id="count">12:00:00</div>
+    <div class="small">wait this timer out for your gift &lt;3</div>
+
+    <div class="heart-row" aria-hidden="false" aria-label="heart decoration">
+      <svg class="heart" viewBox="0 0 32 29" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="false" focusable="false">
+        <path d="M23.6 2c-2.6 0-4.6 1.6-5.6 3.2C16.9 3.6 14.9 2 12.3 2 8 2 4.9 5 4.9 9.3c0 7.1 10.3 12.8 11.4 13.5.3.2.8.2 1.1 0 1.1-.7 11.4-6.4 11.4-13.5C27.4 5 24.3 2 20 2z" fill="var(--base)"/>
+      </svg>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const display = document.getElementById('count');
+      const STORAGE_KEY = 'birthday_timer_end_v1';
+      function getOrCreateEnd(){
+        try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          const now = Date.now();
+          if(stored){
+            const parsed = parseInt(stored, 10);
+            if(!isNaN(parsed) && parsed > now) return parsed;
+          }
+          const end = now + 12 * 60 * 60 * 1000;
+          localStorage.setItem(STORAGE_KEY, String(end));
+          return end;
+        } catch(e){
+          return Date.now() + 12 * 60 * 60 * 1000;
+        }
+      }
+      let end = getOrCreateEnd();
+      let timerInterval = null;
+      function update(){
+        const now = Date.now();
+        let diff = Math.max(0, end - now);
+        const hrs = Math.floor(diff / (1000*60*60));
+        diff -= hrs * 1000*60*60;
+        const mins = Math.floor(diff / (1000*60));
+        diff -= mins * 1000;
+        const secs = Math.floor(diff / 1000);
+        function pad(n){ return String(n).padStart(2,'0'); }
+        display.textContent = pad(hrs) + ':' + pad(mins) + ':' + pad(secs);
+        if(end - now <= 0){ clearInterval(timerInterval); display.textContent = '00:00:00'; }
+      }
+      function startInterval(){ if(timerInterval) clearInterval(timerInterval); update(); timerInterval = setInterval(update, 1000); }
+      startInterval();
+      window.addEventListener('storage', function(e){
+        if(e.key === STORAGE_KEY){
+          const val = e.newValue;
+          if(val){
+            const parsed = parseInt(val,10);
+            if(!isNaN(parsed)){ end = parsed; startInterval(); }
+          }
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

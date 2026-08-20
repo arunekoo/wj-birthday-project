@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>wj's birthday project</title>
+  <style>
+    :root{
+      --base: #6194b8;
+      --stripe: #90b8d4;
+      --btn-w:220px;
+      --btn-h:64px;
+    }
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+    body{
+      background: repeating-linear-gradient(
+        90deg,
+        var(--base) 0 56px,
+        var(--stripe) 56px 112px
+      );
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#fff;
+    }
+    .card{
+      width:92%;
+      max-width:760px;
+      text-align:center;
+      padding:40px;
+      background:rgba(255,255,255,0.06);
+      border-radius:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.12);
+      backdrop-filter: blur(4px);
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:14px;
+      flex-direction:column;
+      margin-bottom:18px;
+    }
+    .gif-wrap{
+      width:200px;
+      height:200px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .gif-wrap img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      border-radius:12px;
+      display:block;
+      background:transparent;
+    }
+    .label{
+      margin-top:12px;
+      font-size:26px;
+      font-weight:700;
+      color: rgba(255,255,255,0.95);
+    }
+    .actions{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:20px;
+      margin-top:12px;
+    }
+    button#yes {
+      width:var(--btn-w);
+      height:var(--btn-h);
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      font-size:20px;
+      font-weight:700;
+      background:#ffffff;
+      color:var(--base);
+      box-shadow:0 10px 26px rgba(0,0,0,0.16);
+    }
+    .note{margin-top:14px;font-size:13px;opacity:0.95;color:rgba(255,255,255,0.95)}
+    @media (max-width:520px){
+      :root{ --btn-w:180px; --btn-h:56px; }
+      .gif-wrap{ width:140px; height:140px; }
+      .label{ font-size:20px; }
+      .card{padding:22px;}
+    }
+  </style>
+</head>
+<body>
+  <div class="card" role="main">
+    <div class="brand" aria-hidden="false">
+      <div class="gif-wrap" aria-hidden="false">
+        <!-- Ensure milkmochabear.gif is saved in the same folder -->
+        <img src="milkmochabear.gif" alt="cute dancing bear gif">
+      </div>
+
+      <!-- updated text as requested -->
+      <div class="label">is it your birthday? (˵ᵕ̴᷄ ᗜ ᵕ̴᷅˵)</div>
+    </div>
+
+    <div class="actions">
+      <button id="yes" type="button" aria-label="Yes, it is my birthday">yes</button>
+    </div>
+
+    <div class="note">Click yes to proceed</div>
+  </div>
+
+  <script>
+    (function(){
+      const yes = document.getElementById('yes');
+      yes.addEventListener('click', function(){
+        try { sessionStorage.setItem('clickedYes','1'); } catch(e){}
+        // verify happy.html exists before navigation
+        fetch('happy.html', { method: 'HEAD', cache: 'no-store' }).then(resp => {
+          if(resp.ok || resp.status === 0){
+            location.href = 'happy.html';
+          } else {
+            alert('Could not find happy.html. Make sure happy.html is in the same folder as index.html.');
+            console.error('happy.html HEAD returned', resp.status);
+          }
+        }).catch(err => {
+          console.warn('HEAD failed, navigating anyway:', err);
+          location.href = 'happy.html';
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
